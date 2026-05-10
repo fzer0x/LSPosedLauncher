@@ -110,11 +110,9 @@ class MainActivity : ComponentActivity() {
             try {
                 val p = Runtime.getRuntime().exec("su")
                 val os = DataOutputStream(p.outputStream)
-                
-                os.writeBytes("am broadcast -a android.provider.Telephony.SECRET_CODE -d android_secret_code://5776733 --receiver-include-background\n")
-                
-                os.writeBytes("am start -n com.android.shell/.BugreportWarningActivity -a android.intent.action.MAIN -c org.lsposed.manager.LAUNCH_MANAGER --receiver-foreground\n")
-                
+
+                os.writeBytes("am broadcast -a android.telephony.action.SECRET_CODE -d android_secret_code://5776733\n")
+
                 os.writeBytes("exit\n")
                 os.flush()
                 p.waitFor()
