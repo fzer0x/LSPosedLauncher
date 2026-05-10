@@ -31,9 +31,7 @@ class MainActivity : ComponentActivity() {
                 retries--
             }
 
-            val launched = tryOpenFromNotification()
-            
-            if (!launched) {
+            if (!tryOpenFromNotification() && !tryManagerFallback()) {
                 tryRootFallback()
             }
             
@@ -68,17 +66,20 @@ class MainActivity : ComponentActivity() {
 
     private fun tryOpenFromNotification(): Boolean {
         val notifications = LSPosedNotificationListener.getActiveNotifications() ?: return false
-        
+
         for (sbn in notifications) {
             val packageName = sbn.packageName
             val extras = sbn.notification.extras
             val title = extras.getCharSequence("android.title")?.toString() ?: ""
-            val text = extras.getCharSequence("android.text")?.toString() ?: ""
 
             val match = packageName.contains("lsposed", ignoreCase = true) ||
-                    title.contains("LSPosed", ignoreCase = true) ||
-                    text.contains("LSPosed", ignoreCase = true) ||
-                    (packageName == "com.android.shell" && text.contains("LSPosed", ignoreCase = true))
+                    (listOf(
+                        "android",
+                        "com.android.shell"
+                    ).contains(packageName) && (title.contains(
+                        "LSPosed",
+                        ignoreCase = true
+                    ) || title.contains("Vector", ignoreCase = true)))
 
             if (match) {
                 try {
@@ -93,6 +94,15 @@ class MainActivity : ComponentActivity() {
             }
         }
         return false
+    }
+
+    private fun tryManagerFallback(): Boolean {
+        val intent = packageManager.getLaunchIntentForPackage("org.lsposed.manager")
+
+        if(intent != null)
+            startActivity(intent)
+
+        return intent != null
     }
 
     private suspend fun tryRootFallback() {
